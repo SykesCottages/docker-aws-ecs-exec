@@ -12,7 +12,7 @@ This will connect to your AWS account and give you a menu system to check/connec
 ### Usage flags
 
 ```shell
-Usage: $PROGNAME [-v] [-p profile] [-r region]
+Usage: connect [-v] [-p profile] [-r region]
 ```
 
 - `-v` Run AWS cli commands in debug mode
