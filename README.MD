@@ -72,8 +72,9 @@ If deployments are controlled by code deploy don't specify the `--force-new-depl
 
 ### SSM Message Permissions
 
-In the article suggested above there's various permissions they "advise", but in a nutshell all you need is the SSM permissions. 
-For the task execution role which can be achieved by creating a policy like below and attaching it to your role.
+In the article suggested above there's various permissions they "advise", but in a nutshell all you need is the SSM 
+permissions for the task execution role. This can be achieved by creating a policy like the one shown below and 
+attaching it to your role.
 
 ```json
 {
