@@ -69,7 +69,19 @@ HEIGHT=28
 WIDTH=60
 CHOICE_HEIGHT=20
 
+aws $PROFILE $REGION $VERBOSE sts get-caller-identity > /dev/null 2>&1
+
+if [ $? -ne 0 ]; then
+    echo "AWS Credential failure - check the key or the profile"
+    exit 1;
+fi
+
 CLUSTERS=$(aws $PROFILE $REGION $VERBOSE ecs list-clusters | jq -r '.clusterArns[] |= sub("arn:aws:ecs:[a-z]{2}-[a-z]{4}-[0-9]+:[0-9]+:[a-z]+/"; "") | .clusterArns[]'|sort)
+
+if [ -z ${CLUSTERS[@]} ]; then
+    echo "AWS Permission failure - check the permissions and that the region is specified"
+    exit 2;
+fi
 
 printOptions "$BACKTITLE" "1. Select your ECS Cluster" "ECS Clusters" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "${CLUSTERS[@]}"
 
