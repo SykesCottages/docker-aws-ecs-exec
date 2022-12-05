@@ -72,15 +72,29 @@ CHOICE_HEIGHT=20
 aws $PROFILE $REGION $VERBOSE sts get-caller-identity > /dev/null 2>&1
 
 if [ $? -ne 0 ]; then
-    echo "AWS Credential failure - check the key or the profile"
-    exit 1;
+    PROFILES=$(aws $PROFILE $REGION $VERBOSE configure list-profiles)
+    printOptions "$BACKTITLE" "Select the AWS profile you wish to use" "Profiles" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "${PROFILES}"
+    PROFILE="--profile=$RESPONSE"
+
+    aws $PROFILE $REGION $VERBOSE sts get-caller-identity > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "AWS Credential failure - check the key or the profile"
+        exit 1;
+    fi
 fi
 
 CLUSTERS=$(aws $PROFILE $REGION $VERBOSE ecs list-clusters | jq -r '.clusterArns[] |= sub("arn:aws:ecs:[a-z]{2}-[a-z]{4}-[0-9]+:[0-9]+:[a-z]+/"; "") | .clusterArns[]'|sort)
 
 if [ -z ${CLUSTERS[@]} ]; then
-    echo "AWS Permission failure - check the permissions and that the region is specified"
-    exit 2;
+    REGIONS=$(aws --profile=sykes_prod --region=eu-west-1 ec2 describe-regions --query="Regions[].RegionName" --output text)
+    printOptions "$BACKTITLE" "Select the AWS Region you wish to use" "Region" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "${REGIONS}"
+    REGION="--region=$RESPONSE"
+    CLUSTERS=$(aws $PROFILE $REGION $VERBOSE ecs list-clusters | jq -r '.clusterArns[] |= sub("arn:aws:ecs:[a-z]{2}-[a-z]{4}-[0-9]+:[0-9]+:[a-z]+/"; "") | .clusterArns[]'|sort)
+
+    if [ -z ${CLUSTERS[@]} ]; then
+        echo "AWS Permission failure - check the permissions and that the region is specified"
+        exit 2;
+    fi
 fi
 
 printOptions "$BACKTITLE" "1. Select your ECS Cluster" "ECS Clusters" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "${CLUSTERS[@]}"
