@@ -86,7 +86,7 @@ fi
 CLUSTERS=$(aws $PROFILE $REGION $VERBOSE ecs list-clusters | jq -r '.clusterArns[] |= sub("arn:aws:ecs:[a-z]{2}-[a-z]{4}-[0-9]+:[0-9]+:[a-z]+/"; "") | .clusterArns[]'|sort)
 
 if [ -z ${CLUSTERS[@]} ]; then
-    REGIONS=$(aws --profile=sykes_prod --region=eu-west-1 ec2 describe-regions --query="Regions[].RegionName" --output text)
+    REGIONS=$(aws $PROFILE --region=eu-west-1 ec2 describe-regions --query="Regions[].RegionName" --output text)
     printOptions "$BACKTITLE" "Select the AWS Region you wish to use" "Region" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "${REGIONS}"
     REGION="--region=$RESPONSE"
     CLUSTERS=$(aws $PROFILE $REGION $VERBOSE ecs list-clusters | jq -r '.clusterArns[] |= sub("arn:aws:ecs:[a-z]{2}-[a-z]{4}-[0-9]+:[0-9]+:[a-z]+/"; "") | .clusterArns[]'|sort)
