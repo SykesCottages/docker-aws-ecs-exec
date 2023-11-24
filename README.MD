@@ -4,7 +4,7 @@
 
 If you want an easy way to check and connect to an ECS container you can simply run the connect tool with
 ```shell
-$ docker-compose run --rm aws connect
+docker compose run --rm aws connect
 ```
 
 This will connect to your AWS account and give you a menu system to check/connect to your desired tasks.
@@ -24,7 +24,7 @@ Usage: connect [-v] [-p profile] [-r region]
 Validate that you can connect to the ECS cluster and task in question with:
 
 ```shell
-docker-compose run --rm aws check-ecs <CLUSTER_NAME> <TASK_ID>
+docker compose run --rm aws check-ecs <CLUSTER_NAME> <TASK_ID>
 ```
 
 This is an open source tool created by [AWS Containers](https://github.com/aws-containers/amazon-ecs-exec-checker) which checks your setup has all the appropirate permissions and settings to allow a connection.
@@ -34,7 +34,7 @@ This is an open source tool created by [AWS Containers](https://github.com/aws-c
 Connect to an ECS container with:
 
 ```shell
-docker-compose run --rm aws aws ecs execute-command \
+docker compose run --rm aws aws ecs execute-command \
     --cluster <CLUSTER_NAME> \
     --task <TASK_ID> \
     --container <CONTAINER_NAME> \
@@ -50,7 +50,7 @@ Please make sure you've read and understood [Using Amazon ECS Exec to access you
 
 Checking that your service and tasks have execute command enabled. You can do this manually by running:
 ```shell
-docker-compose run --rm aws aws ecs describe-tasks \
+docker compose run --rm aws aws ecs describe-tasks \
     --output json \
     --query "tasks[0].enableExecuteCommand" \
     --cluster <CLUSTER_NAME> \
@@ -60,7 +60,7 @@ docker-compose run --rm aws aws ecs describe-tasks \
 If this value is `false` then you can update it with:
 
 ```shell
-docker-compose run --rm aws aws ecs update-service \
+docker compose run --rm aws aws ecs update-service \
     --cluster <CLUSTER_NAME> \
     --service <SERVICE_NAME> \
     --enable-execute-command \
