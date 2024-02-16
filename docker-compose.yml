@@ -3,6 +3,7 @@ version: '3'
 services:
   aws:
     build: .
+    platform: linux/amd64
     volumes:
       - ~/.aws/credentials:/root/.aws/credentials
       - ~/.aws/config:/root/.aws/config
