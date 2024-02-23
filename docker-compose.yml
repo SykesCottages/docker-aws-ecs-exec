@@ -5,7 +5,6 @@ services:
     build: .
     platform: linux/amd64
     volumes:
-      - ~/.aws/credentials:/root/.aws/credentials
-      - ~/.aws/config:/root/.aws/config
+      - ~/.aws:/root/.aws
       - /var/run/docker.sock:/var/run/docker.sock
     privileged: true

@@ -37,8 +37,8 @@ function printOptions()
   for OPTION in ${ARRAY[@]}
   do
       OPTIONS[INDEX++]=$COUNTER
-      OPTIONS[INDEX++]=$OPTION
-      LOOKUP[$COUNTER]=$OPTION
+      OPTIONS[INDEX++]="${OPTION}"
+      LOOKUP[$COUNTER]="${OPTION}"
       COUNTER=$((COUNTER+1))
   done
 
@@ -83,18 +83,42 @@ if [ $? -ne 0 ]; then
     fi
 fi
 
-CLUSTERS=$(aws $PROFILE $REGION $VERBOSE ecs list-clusters | jq -r '.clusterArns[] |= sub("arn:aws:ecs:[a-z]{2}-[a-z]{4}-[0-9]+:[0-9]+:[a-z]+/"; "") | .clusterArns[]'|sort)
 
-if [ -z ${CLUSTERS[@]} ]; then
+if [ -z ${REGION} ]; then
     REGIONS=$(aws $PROFILE --region=eu-west-1 ec2 describe-regions --query="Regions[].RegionName" --output text)
-    printOptions "$BACKTITLE" "Select the AWS Region you wish to use" "Region" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "${REGIONS}"
+printOptions "$BACKTITLE" "Select the AWS Region you wish to use" "Region" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "${REGIONS}"
     REGION="--region=$RESPONSE"
-    CLUSTERS=$(aws $PROFILE $REGION $VERBOSE ecs list-clusters | jq -r '.clusterArns[] |= sub("arn:aws:ecs:[a-z]{2}-[a-z]{4}-[0-9]+:[0-9]+:[a-z]+/"; "") | .clusterArns[]'|sort)
+fi
 
-    if [ -z ${CLUSTERS[@]} ]; then
-        echo "AWS Permission failure - check the permissions and that the region is specified"
-        exit 2;
-    fi
+printOptions "$BACKTITLE" "Select EC2 or ECS" "Type" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "ECS" "EC2"
+
+if [ $RESPONSE = "EC2" ]; then
+    INSTANCES=$(aws --profile=sykes_prod ec2 --region=eu-west-1 describe-instances | jq -r '.Reservations[].Instances[] | {id:.InstanceId, name: .Tags[] | select(.Key == "Name").Value } | .id + "|" + .name')
+    INSTANCES="${INSTANCES// /_}"
+	
+    printOptions "$BACKTITLE" "Select the AWS Region you wish to use" "Region" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "${INSTANCES}"
+
+    INSTANCE_IP=$(aws $PROFILE $REGION $VERBOSE ec2 describe-instances \
+    --instance-ids ${RESPONSE%%|*} \
+    --query 'Reservations[].Instances[].PrivateIpAddress' \
+    --output text)
+
+    ssh-keygen -t rsa -N "" -f aws-random.key
+    aws $PROFILE $REGION $VERBOSE ec2-instance-connect send-ssh-public-key \
+	--instance-id ${RESPONSE%%|*} \
+	--instance-os-user ubuntu \
+	--ssh-public-key file://aws-random.key.pub \
+	$AWS_COMMAND > /dev/null
+    ssh -o "IdentitiesOnly=yes" -o "StrictHostKeyChecking=no" -i aws-random.key ubuntu@$INSTANCE_IP
+
+    exit 1;
+fi;
+
+CLUSTERS=$(aws $PROFILE $REGION $VERBOSE ecs list-clusters | jq -r '.clusterArns[] |= sub("arn:aws:ecs:[a-z]{2}-[a-z]{4}-[0-9]+:[0-9]+:[a-z]+/"; "") | .clusterArns[]'|sort)
+if [ -z ${CLUSTERS[@]} ]; then
+
+    echo "AWS Permission failure - check the permissions and that the region is specified"
+    exit 2;
 fi
 
 printOptions "$BACKTITLE" "1. Select your ECS Cluster" "ECS Clusters" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "${CLUSTERS[@]}"
