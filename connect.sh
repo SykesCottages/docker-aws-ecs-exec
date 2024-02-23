@@ -96,7 +96,7 @@ if [ $RESPONSE = "EC2" ]; then
     INSTANCES=$(aws --profile=sykes_prod ec2 --region=eu-west-1 describe-instances | jq -r '.Reservations[].Instances[] | {id:.InstanceId, name: .Tags[] | select(.Key == "Name").Value } | .id + "|" + .name')
     INSTANCES="${INSTANCES// /_}"
 	
-    printOptions "$BACKTITLE" "Select the AWS Region you wish to use" "Region" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "${INSTANCES}"
+    printOptions "$BACKTITLE" "Select the instance you wish to connect to" "Region" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "${INSTANCES}"
 
     INSTANCE_IP=$(aws $PROFILE $REGION $VERBOSE ec2 describe-instances \
     --instance-ids ${RESPONSE%%|*} \
