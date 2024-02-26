@@ -1,4 +1,4 @@
-# AWS ECS Connector
+# AWS ECS/EC2 Connector
 
 ## Connect Tool
 
