@@ -93,7 +93,7 @@ fi
 printOptions "$BACKTITLE" "Select EC2 or ECS" "Type" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "ECS" "EC2"
 
 if [ $RESPONSE = "EC2" ]; then
-    INSTANCES=$(aws --profile=sykes_prod ec2 --region=eu-west-1 describe-instances | jq -r '.Reservations[].Instances[] | {id:.InstanceId, name: .Tags[] | select(.Key == "Name").Value } | .id + "|" + .name')
+    INSTANCES=$(aws $PROFILE $REGION $VERBOSE ec2 describe-instances | jq -r '.Reservations[].Instances[] | {id:.InstanceId, name: .Tags[] | select(.Key == "Name").Value } | .id + "|" + .name')
     INSTANCES="${INSTANCES// /_}"
 	
     printOptions "$BACKTITLE" "Select the instance you wish to connect to" "Region" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "${INSTANCES}"
