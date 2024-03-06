@@ -95,21 +95,30 @@ printOptions "$BACKTITLE" "Select EC2 or ECS" "Type" "$HEIGHT" "$WIDTH" "$CHOICE
 if [ $RESPONSE = "EC2" ]; then
     INSTANCES=$(aws $PROFILE $REGION $VERBOSE ec2 describe-instances | jq -r '.Reservations[].Instances[] | {id:.InstanceId, name: .Tags[] | select(.Key == "Name").Value } | .id + "|" + .name')
     INSTANCES="${INSTANCES// /_}"
-	
+
+	  printOptions "$BACKTITLE" "How do you want to connect?" "Region" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "SSH" "SSM"
+    CONNECTION_TYPE="${RESPONSE%%|*}"
+
     printOptions "$BACKTITLE" "Select the instance you wish to connect to" "Region" "$HEIGHT" "$WIDTH" "$CHOICE_HEIGHT" "${INSTANCES}"
 
-    INSTANCE_IP=$(aws $PROFILE $REGION $VERBOSE ec2 describe-instances \
-    --instance-ids ${RESPONSE%%|*} \
-    --query 'Reservations[].Instances[].PrivateIpAddress' \
-    --output text)
+    if [ $CONNECTION_TYPE = "SSH" ]; then
+      INSTANCE_IP=$(aws $PROFILE $REGION $VERBOSE ec2 describe-instances \
+      --instance-ids ${RESPONSE%%|*} \
+      --query 'Reservations[].Instances[].PrivateIpAddress' \
+      --output text)
 
-    ssh-keygen -t rsa -N "" -f aws-random.key
-    aws $PROFILE $REGION $VERBOSE ec2-instance-connect send-ssh-public-key \
-	--instance-id ${RESPONSE%%|*} \
-	--instance-os-user ubuntu \
-	--ssh-public-key file://aws-random.key.pub \
-	$AWS_COMMAND > /dev/null
-    ssh -o "IdentitiesOnly=yes" -o "StrictHostKeyChecking=no" -i aws-random.key ubuntu@$INSTANCE_IP
+      ssh-keygen -t rsa -N "" -f aws-random.key
+      aws $PROFILE $REGION $VERBOSE ec2-instance-connect send-ssh-public-key \
+    --instance-id ${RESPONSE%%|*} \
+    --instance-os-user ubuntu \
+    --ssh-public-key file://aws-random.key.pub \
+    $AWS_COMMAND > /dev/null
+      ssh -o "IdentitiesOnly=yes" -o "StrictHostKeyChecking=no" -i aws-random.key ubuntu@$INSTANCE_IP
+    fi;
+
+    if [ $CONNECTION_TYPE = "SSM" ]; then
+      aws $PROFILE $REGION $VERBOSE ssm start-session --target ${RESPONSE%%|*}
+    fi;
 
     exit 1;
 fi;
