@@ -156,6 +156,8 @@ printOptions "$BACKTITLE" "4. Select your operation" "Operations" "$HEIGHT" "$WI
 COMMAND=$RESPONSE
 
 if [ "$COMMAND" = "Check" ]; then
+  export AWS_PROFILE=${PROFILE#*=}
+  export AWS_REGION=${REGION#*=}
   check-ecs $CLUSTER $TASK
 else
   CONTAINERS=$(aws $PROFILE $REGION $VERBOSE ecs describe-tasks --cluster $CLUSTER --tasks $TASK | jq -r ".tasks[].containers[].name" | sort)
